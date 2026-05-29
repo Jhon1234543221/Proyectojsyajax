@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio JS & AJAX — Ciberseguridad</title>
+    <style>
+        :root {
+            --bg: #0c0f16;
+            --card-bg: rgba(26, 30, 42, 0.85);
+            --card-border: #2d3341;
+            --text: #e0e4ec;
+            --text-muted: #8b92a3;
+            --accent: #00d4ff;
+            --accent-hover: #00b4e0;
+            --danger: #ff4d6d;
+            --success: #00e676;
+            --glow: 0 0 15px rgba(0, 212, 255, 0.4);
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Fondo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(45deg, #0a0f1a, #131a2b, #0d1422, #101826);
+            background-size: 400% 400%;
+            z-index: -2;
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(0,212,255,0.6);
+        }
+
+        .section-title {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+            margin: 2.5rem 0 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: var(--glow), var(--shadow);
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #131720;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,212,255,0.15);
+        }
+
+        button {
+            background: var(--accent);
+            color: #0a0f18;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 18px rgba(0,212,255,0.6);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #0f1219;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 40px;
+            border: 1px solid var(--card-border);
+            color: #cbd5e0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .ajax-container {
+            background: rgba(26, 30, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            margin-top: 1rem;
+        }
+
+        .ajax-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .estado-item {
+            font-size: 0.9rem;
+            padding: 4px 0;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2em 0.6em;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .badge-success { background: var(--success); color: #000; }
+        .badge-error { background: var(--danger); color: #fff; }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .flex-row > * { flex: 1; }
+        .hidden { display: none; }
+
+        @media (max-width: 768px) {
+            .ajax-grid { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="header-title">⎔ Laboratorio JS & AJAX ⎔<br><span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">Prácticas de ciberseguridad</span></h1>
+
+    <h2 class="section-title">Ejercicios JavaScript</h2>
+    <div class="grid">
+        <!-- Palíndromo -->
+        <div class="card">
+            <h3>1. Palíndromo</h3>
+            <div class="input-group">
+                <input type="text" id="pal-input" placeholder="Ej: Anita lava la tina">
+            </div>
+            <button onclick="verificarPalindromo()">Comprobar</button>
+            <div class="result-box" id="pal-res"></div>
+        </div>
+        <!-- Número mayor -->
+        <div class="card">
+            <h3>2. Número Mayor</h3>
+            <div class="input-group" style="display: flex; gap: 10px;">
+                <input type="number" id="num1-input" placeholder="Num 1">
+                <input type="number" id="num2-input" placeholder="Num 2">
+            </div>
+            <button onclick="mostrarMayor()">Comparar</button>
+            <div class="result-box" id="mayor-res"></div>
+        </div>
+        <!-- Vocales únicas -->
+        <div class="card">
+            <h3>3. Extraer Vocales</h3>
+            <div class="input-group">
+                <input type="text" id="voc-input" placeholder="Escribe una frase...">
+            </div>
+            <button onclick="mostrarVocalesUnicas()">Extraer</button>
+            <div class="result-box" id="voc-res"></div>
+        </div>
+        <!-- Contar vocales -->
+        <div class="card">
+            <h3>4. Contar Vocales</h3>
+            <div class="input-group">
+                <input type="text" id="count-input" placeholder="Escribe una frase...">
+            </div>
+            <button onclick="contarVocales()">Contar</button>
+            <div class="result-box" id="count-res"></div>
+        </div>
+    </div>
+
+    <!-- Sección AJAX -->
+    <h2 class="section-title">Simulador de Peticiones AJAX</h2>
+    <div class="ajax-container">
+        <div class="flex-row" style="margin-bottom: 1.5rem;">
+            <div style="flex:2;">
+                <label style="font-size:0.85rem; color:var(--text-muted);">URL objetivo</label>
+                <input type="text" id="urlInput" placeholder="https://api.github.com">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:0.85rem; color:var(--text-muted);">Método</label>
+                <select id="methodSelect">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                </select>
+            </div>
+            <div style="flex:0.5;">
+                <label style="font-size:0.85rem; color:var(--text-muted);">Timeout (ms)</label>
+                <input type="number" id="timeoutInput" value="5000" min="500" step="500">
+            </div>
+            <div style="flex:0.5; align-self: flex-end;">
+                <button id="btnMostrar" style="height: 2.8rem;">Enviar</button>
+            </div>
+        </div>
+        <div id="bodyGroup" class="input-group hidden">
+            <label style="font-size:0.85rem; color:var(--text-muted);">Cuerpo (JSON)</label>
+            <textarea id="bodyInput" rows="3" placeholder='{"clave":"valor"}'></textarea>
+        </div>
+        <div class="ajax-grid">
+            <div>
+                <h3>📡 Estados de la petición</h3>
+                <div id="zonaEstados" class="result-box"></div>
+            </div>
+            <div>
+                <h3>🏁 Código de estado</h3>
+                <div id="zonaCodigo" class="result-box"></div>
+            </div>
+            <div class="full-width">
+                <h3>📋 Cabeceras HTTP de la respuesta</h3>
+                <div id="zonaCabeceras" class="result-box"></div>
+            </div>
+            <div class="full-width">
+                <h3>📦 Contenido de la respuesta</h3>
+                <div id="zonaContenidos" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para abrir terminal externa -->
+    <div style="text-align: right; margin-top: 2rem;">
+        <button onclick="window.open('terminal.html', 'CiberTerminal', 'width=950,height=700')"
+                style="width: auto; background: #1e293b; border: 1px solid var(--accent); color: var(--accent);">
+            🖥️ Abrir Terminal por separado
+        </button>
+    </div>
+</div>
+
+<script>
+    /* =============================================
+       FUNCIONES JAVASCRIPT
+       ============================================= */
+    function verificarPalindromo() {
+        const cadena = document.getElementById('pal-input').value;
+        const resBox = document.getElementById('pal-res');
+        if(!cadena) {
+            resBox.innerHTML = '<span style="color:#ff4d6d;">⚠️ Introduce texto.</span>';
+            return;
+        }
+        const limpia = cadena.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[\W_]/g, '');
+        if(limpia.length === 0) {
+            resBox.innerHTML = '<span style="color:#ff4d6d;">⚠️ No hay caracteres válidos.</span>';
+            return;
+        }
+        const invertida = limpia.split('').reverse().join('');
+        if(limpia === invertida) {
+            resBox.innerHTML = `<span style="color:#00e676;">✅ Sí es un palíndromo.</span><br>"${cadena.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`;
+        } else {
+            resBox.innerHTML = `<span style="color:#ff4d6d;">❌ No es un palíndromo.</span><br>"${cadena.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`;
+        }
+    }
+
+    function mostrarMayor() {
+        const num1 = parseFloat(document.getElementById('num1-input').value);
+        const num2 = parseFloat(document.getElementById('num2-input').value);
+        const resBox = document.getElementById('mayor-res');
+        if (isNaN(num1) || isNaN(num2)) {
+            resBox.innerHTML = '<span style="color:#ff4d6d;">Introduce dos valores numéricos.</span>';
+        } else {
+            const mayor = Math.max(num1, num2);
+            if(num1 === num2) {
+                resBox.textContent = '⚖️ Los números son iguales.';
+            } else {
+                resBox.innerHTML = `🔹 El número mayor es: <strong>${mayor}</strong>`;
+            }
+        }
+    }
+
+    function mostrarVocalesUnicas() {
+        const frase = document.getElementById('voc-input').value;
+        const resBox = document.getElementById('voc-res');
+        if (!frase) {
+            resBox.innerHTML = '<span style="color:#ff4d6d;">Introduce una frase.</span>';
+            return;
+        }
+        const vocalesEncontradas = frase.match(/[aeiouáéíóú]/gi);
+        if (vocalesEncontradas) {
+            const unicas = [...new Set(vocalesEncontradas.map(v => v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))];
+            resBox.innerHTML = `🔤 Vocales encontradas: <strong>${unicas.join(', ')}</strong>`;
+        } else {
+            resBox.textContent = '🔇 No se encontraron vocales.';
+        }
+    }
+
+    function contarVocales() {
+        const frase = document.getElementById('count-input').value.toLowerCase();
+        const resBox = document.getElementById('count-res');
+        if (!frase) {
+            resBox.innerHTML = '<span style="color:#ff4d6d;">Introduce una frase.</span>';
+            return;
+        }
+        const conteo = { a: 0, e: 0, i: 0, o: 0, u: 0 };
+        for (let letra of frase) {
+            const char = letra.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (conteo.hasOwnProperty(char)) conteo[char]++;
+        }
+        let resultado = '📊 Conteo de vocales:\n';
+        for (const [vocal, cantidad] of Object.entries(conteo)) {
+            resultado += `  ${vocal.toUpperCase()}: ${'■'.repeat(Math.min(cantidad, 20))} (${cantidad})\n`;
+        }
+        resBox.textContent = resultado;
+    }
+
+    /* =============================================
+       AJAX AVANZADO
+       ============================================= */
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlInput = document.getElementById("urlInput");
+        const methodSelect = document.getElementById("methodSelect");
+        const timeoutInput = document.getElementById("timeoutInput");
+        const bodyGroup = document.getElementById("bodyGroup");
+        const bodyInput = document.getElementById("bodyInput");
+        const btnMostrar = document.getElementById("btnMostrar");
+        const zonaEstados = document.getElementById("zonaEstados");
+        const zonaCabeceras = document.getElementById("zonaCabeceras");
+        const zonaCodigo = document.getElementById("zonaCodigo");
+        const zonaContenidos = document.getElementById("zonaContenidos");
+
+        // URL por defecto (página actual)
+        urlInput.value = window.location.href;
+
+        methodSelect.addEventListener('change', () => {
+            const method = methodSelect.value;
+            bodyGroup.classList.toggle('hidden', !['POST', 'PUT', 'PATCH'].includes(method));
+        });
+
+        const estadosTexto = {
+            0: '0 - UNSENT (no iniciada)',
+            1: '1 - OPENED (conexión abierta)',
+            2: '2 - HEADERS_RECEIVED (cabeceras recibidas)',
+            3: '3 - LOADING (descargando)',
+            4: '4 - DONE (completada)'
+        };
+
+        btnMostrar.addEventListener("click", () => {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Introduce una URL.');
+                return;
+            }
+
+            const method = methodSelect.value;
+            const timeout = parseInt(timeoutInput.value, 10) || 5000;
+            const body = (['POST', 'PUT', 'PATCH'].includes(method)) ? bodyInput.value : null;
+
+            // Limpiar zonas
+            zonaEstados.innerHTML = '';
+            zonaContenidos.textContent = '⏳ Esperando respuesta...';
+            zonaCabeceras.textContent = '';
+            zonaCodigo.textContent = '';
+
+            const xhr = new XMLHttpRequest();
+            xhr.timeout = timeout;
+
+            xhr.onreadystatechange = () => {
+                const timestamp = new Date().toLocaleTimeString();
+                const estadoMsg = estadosTexto[xhr.readyState] || `Estado ${xhr.readyState}`;
+                const p = document.createElement('p');
+                p.className = 'estado-item';
+                p.textContent = `${timestamp} - ${estadoMsg}`;
+                zonaEstados.appendChild(p);
+                zonaEstados.scrollTop = zonaEstados.scrollHeight;
+
+                if (xhr.readyState === 4) {
+                    zonaContenidos.textContent = xhr.responseText || '(sin contenido)';
+                    zonaCabeceras.textContent = xhr.getAllResponseHeaders() || '(no disponible)';
+                    const codigo = xhr.status || 0;
+                    const texto = xhr.statusText || 'Error de red';
+                    const badgeClass = (codigo >= 200 && codigo < 300) ? 'badge-success' : 'badge-error';
+                    zonaCodigo.innerHTML = `<span class="badge ${badgeClass}">${codigo}</span> ${texto}`;
+                }
+            };
+
+            xhr.ontimeout = () => {
+                zonaEstados.appendChild(crearEstado('⏰ TIMEOUT: la petición excedió el tiempo.', 'color:#ff4d6d;'));
+                zonaCodigo.innerHTML = '<span class="badge badge-error">0</span> Timeout';
+                zonaContenidos.textContent = 'La petición fue cancelada por timeout.';
+            };
+
+            xhr.onerror = () => {
+                zonaEstados.appendChild(crearEstado('🌐 ERROR DE RED (CORS/DNS).', 'color:#ff4d6d;'));
+                zonaCodigo.innerHTML = '<span class="badge badge-error">0</span> Error de red';
+                zonaContenidos.textContent = 'Error de red. Revisa la consola (F12).';
+            };
+
+            xhr.onabort = () => {
+                zonaEstados.appendChild(crearEstado('🛑 Petición abortada.', 'color:#ffb700;'));
+                zonaCodigo.innerHTML = '<span class="badge badge-error">0</span> Abortada';
+            };
+
+            try {
+                xhr.open(method, url, true);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Accept', 'application/json, text/plain, */*');
+                if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
+                    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                    xhr.send(body);
+                } else {
+                    xhr.send();
+                }
+            } catch (e) {
+                zonaEstados.appendChild(crearEstado(`❌ Error: ${e.message}`, 'color:#ff4d6d;'));
+            }
+        });
+
+        function crearEstado(msg, style) {
+            const p = document.createElement('p');
+            p.className = 'estado-item';
+            p.textContent = msg;
+            if (style) p.style.cssText = style;
+            return p;
+        }
+    });
+</script>
+</body>
+</html>
